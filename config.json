@@ -1,0 +1,33 @@
+{
+  "app": {
+    "title": "OpenFOAM Knowledge Platform",
+    "version": "1.0.0-phase1",
+    "description": "Integrated platform for OpenFOAM simulation management and knowledge sharing"
+  },
+  "defaults": {
+    "reynolds_number": 100000,
+    "reference_length": 1.0,
+    "reference_velocity": 10.0,
+    "kinematic_viscosity": 1e-5,
+    "air_density": 1.225,
+    "max_courant_number": 0.5,
+    "end_time": 5.0,
+    "delta_t": 0.001,
+    "write_interval": 50,
+    "num_subdomains": 4,
+    "angle_of_attack": 5.0,
+    "turbulence_model": "kOmegaSST"
+  },
+  "turbulence_models": [
+    "laminar",
+    "kEpsilon",
+    "kOmegaSST",
+    "SpalartAllmaras",
+    "realizableKE"
+  ],
+  "decompose_methods": [
+    "scotch",
+    "simple",
+    "hierarchical"
+  ]
+}

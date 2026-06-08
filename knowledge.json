@@ -1,0 +1,121 @@
+{
+  "commands": {
+    "blockMesh": {
+      "title": "blockMesh — メッシュ生成",
+      "icon": "🔷",
+      "tips": [
+        "blockMeshDict の vertices 座標は必ず右手系で定義すること。",
+        "グレーディング (simpleGrading) は境界層の y+ 値を意識して設定する。y+ ≈ 1 を狙う場合、壁面第一層は非常に薄くなる。",
+        "メッシュの品質は checkMesh コマンドで必ず確認すること。maxNonOrthogonality < 70、maxSkewness < 4 を目標とする。",
+        "スムーズな収束のために、隣接セルの体積比 (expansion ratio) は 1.3 以下に抑えることを推奨する。"
+      ],
+      "warning": "blockMesh 実行前に、既存の constant/polyMesh ディレクトリを削除しないと古いメッシュが残存するので注意。"
+    },
+    "checkMesh": {
+      "title": "checkMesh — メッシュ品質確認",
+      "icon": "✅",
+      "tips": [
+        "Failed mesh checks が 0 であることを必ず確認する。",
+        "Max aspect ratio は翼面近傍で大きくなりがちだが、1000 以下を目安とする。",
+        "Mesh non-orthogonality の最大値が 70 を超える場合は、ソルバーの nNonOrthogonalCorrectors を増やすこと（推奨値: 2〜3）。"
+      ],
+      "warning": null
+    },
+    "decomposePar": {
+      "title": "decomposePar — 並列分割",
+      "icon": "⚡",
+      "tips": [
+        "decomposeParDict の numberOfSubdomains はコア数に合わせること。コア数以上のサブドメインは意味がない。",
+        "翼まわり計算では scotch 法が自動的に良好な分割を行うため推奨。",
+        "重み付き分割が必要な場合は hierarchical 法を選択し、n (x,y,z) を指定する。",
+        "decomposePar 後は ls -d processor* コマンドで分割数が正しいか確認すること。"
+      ],
+      "warning": "processor* ディレクトリが既に存在する場合は、rm -rf processor* で削除してから再実行すること。"
+    },
+    "pimpleFoam": {
+      "title": "pimpleFoam — 非定常解析実行",
+      "icon": "🚀",
+      "tips": [
+        "クーラン数 (Co) は最大でも 1.0 以下を維持すること。翼面剥離を含む計算では Co < 0.5 を強く推奨する。",
+        "PIMPLE ループの nOuterCorrectors は 1（PISO モード）または 2〜3 を指定する。多すぎると計算コストが増大する。",
+        "残差が下がらない場合は、fvSolution の tolerances を見直すこと。p の tolerance: 1e-6、U の tolerance: 1e-7 を目安とする。",
+        "並列実行は mpirun -np <コア数> pimpleFoam -parallel > log.pimpleFoam 2>&1 & でバックグラウンド実行を推奨。",
+        "計算中は tail -f log.pimpleFoam でリアルタイムにログを監視すること。"
+      ],
+      "warning": "deltaT の初期値が大きすぎると発散することがある。Co 数をモニタリングし、必要に応じて adjustTimeStep yes に設定すること。"
+    },
+    "reconstructPar": {
+      "title": "reconstructPar — 並列結果を統合",
+      "icon": "🔧",
+      "tips": [
+        "reconstructPar -latestTime オプションで最終タイムステップのみを再構成できる（ストレージ節約）。",
+        "全タイムステップが必要な場合は -allRegions や特定時間範囲 -time '0:5' を使用する。",
+        "再構成後は processor* ディレクトリをアーカイブするか削除してディスク容量を確保すること。"
+      ],
+      "warning": null
+    },
+    "paraFoam": {
+      "title": "paraFoam — 可視化",
+      "icon": "👁️",
+      "tips": [
+        "paraFoam -builtin オプションを使用すると ParaView の組み込みリーダーを使用でき、高速に読み込める場合がある。",
+        "大規模計算結果は paraFoam -case <caseDir> でリモートサーバーから結果を読み込むことも可能。",
+        "等値面 (Isosurface) で渦構造を可視化する際は Q 規準 (Q-criterion) の利用を推奨する。"
+      ],
+      "warning": null
+    }
+  },
+  "troubleshoot": {
+    "patterns": [
+      {
+        "id": "non_ortho",
+        "keywords": ["non-orthogonality", "nonOrthogonality", "High aspect ratio"],
+        "title": "メッシュ非直交性の問題",
+        "cause": "メッシュの非直交性が高すぎるため、圧力補正の収束が悪化しています。",
+        "solution": "fvSolution の nNonOrthogonalCorrectors を 2〜3 に増やしてください。また blockMeshDict のグレーディングを見直してメッシュ品質を改善することを強く推奨します。",
+        "severity": "warning"
+      },
+      {
+        "id": "diverge_courant",
+        "keywords": ["Courant Number mean", "Courant Number max", "diverging", "FOAM FATAL ERROR"],
+        "title": "クーラン数超過による発散",
+        "cause": "タイムステップ (deltaT) が大きすぎてクーラン数が 1 を超え、計算が発散しています。",
+        "solution": "system/controlDict の deltaT を小さくするか、adjustTimeStep yes / maxCo 0.5 を設定して自動タイムステップ調整を有効にしてください。",
+        "severity": "error"
+      },
+      {
+        "id": "pressure_residual",
+        "keywords": ["pressure", "PCG", "residual", "not converging"],
+        "title": "圧力残差の収束不良",
+        "cause": "圧力ソルバーの収束が不十分です。メッシュ品質または境界条件の設定に問題がある可能性があります。",
+        "solution": "fvSolution の p の solver を GAMG に変更し、smoother を GaussSeidel に設定してみてください。また checkMesh で非直交性を確認してください。",
+        "severity": "warning"
+      },
+      {
+        "id": "boundary_type",
+        "keywords": ["boundary", "type", "not found", "undefined", "fixedValue"],
+        "title": "境界条件の定義エラー",
+        "cause": "0/ ディレクトリ内の境界条件ファイルに定義されていないパッチ名またはタイプが含まれています。",
+        "solution": "constant/polyMesh/boundary に定義されているパッチ名と、0/U や 0/p の境界条件ファイルのパッチ名が完全に一致しているか確認してください。",
+        "severity": "error"
+      },
+      {
+        "id": "licence",
+        "keywords": ["license", "licence", "not available", "MPI"],
+        "title": "MPI / ライセンス関連エラー",
+        "cause": "MPI 環境またはライセンス認証に問題が発生しています。",
+        "solution": "which mpirun で MPI が正しくインストールされているか確認してください。OpenFOAM の環境変数が正しく設定されているか source $WM_PROJECT_DIR/etc/bashrc を再実行してください。",
+        "severity": "warning"
+      }
+    ],
+    "default_response": {
+      "title": "エラー解析結果（汎用）",
+      "message": "入力されたログから既知のパターンが検出されませんでした。log ファイルの末尾付近にある FOAM FATAL ERROR や Floating point exception のメッセージを中心に貼り付けると、より精度の高い解析が可能です。",
+      "severity": "info"
+    }
+  },
+  "monitor": {
+    "residual_fields": ["Ux", "Uy", "Uz", "p", "k", "omega"],
+    "force_fields": ["lift", "drag", "lift_drag_ratio"]
+  }
+}

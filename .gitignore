@@ -1,0 +1,45 @@
+# ============================================================
+# OpenFOAM Knowledge Platform — .gitignore
+# 「公開するのは app.py と README とダミーJSON のみ」を守る関所
+# ============================================================
+
+# ── 研究室固有の実データ（絶対に公開しない） ────────────────
+# 実パラメータ・ノウハウが入った本番用 JSON
+# ローカルでは以下の名前で保存し、ここには置かない
+config.local.json
+knowledge.local.json
+
+# ── OpenFOAM ケースフォルダ ──────────────────────────────────
+# 計算結果・メッシュ・境界条件（重いうえ機密）
+[0-9]*/          # タイムステップフォルダ（0/ 0.001/ 1.5/ など）
+constant/
+system/
+processor*/
+postProcessing/
+dynamicCode/
+logs/
+
+# ── 生成ファイル ──────────────────────────────────────────────
+temp_preview.png          # 流場プレビュー一時画像
+openfoam_run_log.txt      # 実行ログ保存ファイル
+*.foam                    # ParaView 用ダミーファイル
+
+# ── Python ───────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+.env
+*.egg-info/
+dist/
+build/
+
+# ── OS・エディタ ─────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp
+*.swo
