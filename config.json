@@ -1,7 +1,7 @@
 {
   "app": {
     "title": "OpenFOAM Knowledge Platform",
-    "version": "1.0.0-phase1",
+    "version": "1.0.0",
     "description": "Integrated platform for OpenFOAM simulation management and knowledge sharing"
   },
   "defaults": {

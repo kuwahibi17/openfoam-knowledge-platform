@@ -1,8 +1,10 @@
 """
 OpenFOAM Knowledge Platform — app.py
-Phase 3: リアルタイム残差監視 & 流場スライス画像プレビュー
+現行バージョン: v1.0（AI Code QA 検証チェックリストまで搭載）
 
-変更点 (Phase 2 → Phase 3):
+直近の変更点 (v0.3): リアルタイム残差監視 & 流場スライス画像プレビュー
+
+変更点 (v0.2 → v0.3):
   ■ セクション1b: 残差パーサ
     - parse_residuals_from_log_line() : ログ1行から残差を正規表現で抽出
     - update_residual_dataframe()     : 抽出値を session_state の DataFrame に蓄積
@@ -13,7 +15,7 @@ Phase 3: リアルタイム残差監視 & 流場スライス画像プレビュ�
     - render_surface_preview()        : matplotlib で 2D カラーマップを生成し temp_preview.png に上書き保存
     - try_update_preview()            : 更新間隔チェック付きのプレビュー更新トリガー
 
-  ■ セクション1d: stream_wsl_run() を拡張 (Phase 2 から変更)
+  ■ セクション1d: stream_wsl_run() を拡張 (v0.2 から変更)
     - ログ行ごとに残差を逐次パース → session_state.residual_df に蓄積
     - preview_interval ステップごとに render_surface_preview() を呼び出し
 
@@ -111,7 +113,7 @@ PAGE_TROUBLE = "🔍  Troubleshoot"
 PAGE_QA      = "✅  AI Code QA"
 
 # ──────────────────────────────────────────────
-# 1a. WSL コマンド実行バックエンド  [Phase 2 から継続]
+# 1a. WSL コマンド実行バックエンド  [v0.2 から継続]
 # ──────────────────────────────────────────────
 
 _LOG_TAIL_LINES = 200   # ストリーミング表示の末尾バッファ行数
@@ -173,7 +175,7 @@ def _save_log(label: str, text: str) -> None:
 
 
 # ──────────────────────────────────────────────
-# 1b. 残差パーサ  [Phase 3 新規]
+# 1b. 残差パーサ  [v0.3 新規]
 # ──────────────────────────────────────────────
 
 # OpenFOAM 標準ログの残差行パターン
@@ -264,7 +266,7 @@ def reset_residual_dataframe() -> None:
 
 
 # ──────────────────────────────────────────────
-# 1c. 流場プレビューレンダラ  [Phase 3 新規]
+# 1c. 流場プレビューレンダラ  [v0.3 新規]
 # ──────────────────────────────────────────────
 
 def find_latest_surface_dir(case_dir: str, surface_name: str = "midPlane") -> Optional[Path]:
@@ -550,7 +552,7 @@ def try_update_preview(
 
 
 # ──────────────────────────────────────────────
-# 1d. stream_wsl_run (Phase 3 拡張版)
+# 1d. stream_wsl_run (v0.3 拡張版)
 #     残差パース & プレビュー更新をストリーミングループに統合
 # ──────────────────────────────────────────────
 
@@ -565,7 +567,7 @@ def stream_wsl_run(
 ) -> tuple[int, str]:
     """
     長時間プロセス（pimpleFoam など）を WSL 経由でストリーミング実行する。
-    [Phase 3 拡張] ログ行ごとに残差パース・グラフ更新・プレビュー更新を実行。
+    [v0.3 拡張] ログ行ごとに残差パース・グラフ更新・プレビュー更新を実行。
 
     Args:
         command              : WSL 内コマンドリスト
@@ -701,7 +703,7 @@ def _render_residual_chart(
 
 
 # ──────────────────────────────────────────────
-# 1e. run_command_with_ui (Phase 3: streaming 引数に Phase 3 プレースホルダーを追加)
+# 1e. run_command_with_ui (v0.3: streaming 引数に v0.3 プレースホルダーを追加)
 # ──────────────────────────────────────────────
 
 def run_command_with_ui(
@@ -716,7 +718,7 @@ def run_command_with_ui(
 ) -> None:
     """
     コマンドを実行し結果を Streamlit UI に表示する共通ハンドラ。
-    [Phase 3 拡張] streaming 時に残差グラフ・流場プレビューのプレースホルダーを受け取る。
+    [v0.3 拡張] streaming 時に残差グラフ・流場プレビューのプレースホルダーを受け取る。
     """
     if not win_cwd:
         st.error(
@@ -956,7 +958,7 @@ def page_setup(config: dict) -> None:
         st.caption(f"🐧 WSL マウントパス (自動変換): `{win_to_wsl_path(case_dir_input)}`")
 
     if st.button("📂 ケースフォルダを生成", type="primary", use_container_width=True):
-        # TODO: Phase 4 で実装
+        # TODO: v1.1 で実装
         #   1. templateDir からベースケースをコピー (shutil.copytree)
         #   2. Jinja2 テンプレートエンジンで blockMeshDict / controlDict を書き換え
         #   3. run_command_with_ui("blockMesh", ["blockMesh"], case_dir_input) を呼び出す
@@ -966,13 +968,13 @@ def page_setup(config: dict) -> None:
             f"- 分割数: `{n_sub}` コア / 手法: `{decomp_method}`\n"
             f"- 終了時刻: `{end_time} s` / ΔT: `{delta_t} s`\n"
             f"- 作業ディレクトリ: `{case_dir_input}`\n\n"
-            "⚠️ Phase 3 ではファイルの実書き込みは未実装です。"
+            "⚠️ 現在のバージョンではファイルの実書き込みは未実装です。"
         )
         st.balloons()
 
 
 # ──────────────────────────────────────────────
-# 5. 画面2: Run & Monitor  [Phase 3: 残差リアルタイム & 流場プレビュー統合]
+# 5. 画面2: Run & Monitor  [v0.3: 残差リアルタイム & 流場プレビュー統合]
 # ──────────────────────────────────────────────
 
 def page_run_monitor(knowledge: dict) -> None:
@@ -1060,7 +1062,7 @@ def page_run_monitor(knowledge: dict) -> None:
         "paraFoam":       {"cmd": ["paraFoam", "&"],  "streaming": False, "mpi": False, "timeout": 30},
         # ── テストスクリプト ──
         # cmd は文字列ではなくリストで管理（_build_wsl_cmd が " ".join するため）
-        "Run Test Script": {"cmd": ["python3", "run_test.py"], "streaming": True, "mpi": False, "timeout": 300},
+        "Run Test Script": {"cmd": ["python3", "script/run_test.py"], "streaming": True, "mpi": False, "timeout": 300},
     }
 
     # OpenFOAM コマンドと Test Script を分けて表示するためキーセットを分離
@@ -1240,12 +1242,12 @@ def page_run_monitor(knowledge: dict) -> None:
             st.rerun()
 
     with tab_forces:
-        # TODO: Phase 4 で実装
+        # TODO: v1.1 で実装
         #   1. Path(case_dir) / "postProcessing" / "forces" / "0" / "force.dat" を読み込む
         #   2. 列: time  Fx  Fy  Fz  をパース（先頭 # 行をスキップ）
         #   3. 揚力 = Fy, 抗力 = Fx (迎角に応じて回転変換が必要な場合あり)
         #   4. L/D = lift / drag を計算して表示
-        st.caption("⚠️ 現在はダミーデータを表示しています。実データ読み込みは Phase 4 で実装予定。")
+        st.caption("⚠️ 現在はダミーデータを表示しています。実データ読み込みは v1.1 で実装予定。")
         df_forces = generate_dummy_forces(steps=80)
         col_f1, col_f2 = st.columns(2)
         with col_f1:
@@ -1297,7 +1299,7 @@ def page_troubleshoot(knowledge: dict) -> None:
             st.warning("ログが入力されていません。")
             return
 
-        # TODO: Phase 4 で実装
+        # TODO: v1.1 で実装
         #   Anthropic API / ローカル LLM によるより高度な自然言語ログ解析。
         matched = [
             p for p in patterns
@@ -1336,7 +1338,7 @@ def page_troubleshoot(knowledge: dict) -> None:
 
 
 # ──────────────────────────────────────────────
-# 7. 画面4: AI Code QA  [Phase 3 追加]
+# 7. 画面4: AI Code QA  [v1.0 追加]
 # ──────────────────────────────────────────────
 
 # チェックリスト定義（外部 JSON に切り出す場合は knowledge.json の "qa_checks" キーへ）
@@ -1519,7 +1521,7 @@ def setup_sidebar(config: dict) -> str:
     with st.sidebar:
         st.markdown("## 🌊 OpenFOAM")
         st.markdown("### Knowledge Platform")
-        st.caption(f"v{app_info.get('version', '1.0.0')}  |  Phase 3+")
+        st.caption(f"v{app_info.get('version', '1.0.0')}")
         st.divider()
 
         page = st.radio(
