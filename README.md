@@ -1,5 +1,7 @@
 # 🌊 OpenFOAM Knowledge Platform
 
+**🌐 言語:** [English](README.en.md) | **日本語**
+
 > 流体解析ソフト **OpenFOAM** の操作を GUI で完結させ、組織のノウハウを共有するための統合プラットフォーム
 
 [![Python](https://img.shields.io/badge/Python-3.10%2B-blue?logo=python)](https://www.python.org/)
